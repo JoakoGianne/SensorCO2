@@ -6,7 +6,6 @@
  *    Two 7 segment display Controlated With CD4511 [1={A8|12|-B5|9|-C6|10|-D7|11|},2={A12|16|-B9|13|-C10|14|-D11|15|}]
  *    Buzzer with transistor [4 |2|]
  *    Button [3 |1|]
- *  ---TEST---
  */
 #include <SoftwareSerial.h>
 SoftwareSerial Sensor(15, 14);  //Tx 14 Rx 15
@@ -238,7 +237,7 @@ void SRead()
                 buzzeron = 1000;
                 ist = 1;
             }
-            else if (lect[0] <= 5)
+            else if (lect[0] <= 5 && ist == 1)
                 ist = 0;
             else {
                 Read = 0;
