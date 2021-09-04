@@ -26,7 +26,7 @@ int DisplayON = 0, dt, dt2;
 int buzz = 0, buzzeron = 0;
 int Read = 0, d1 = 10, d2 = 10, lect[4], ist;
 int pul = 0, puls = 0;
-char Data, DataS[50], dat = 0;
+char Data, DataS[50], dat = 0, R = 0;
 unsigned long tt, pultime = 0, pultime2, pulontime, pulon, buzzertime = 0;
 
 //--------------------------
@@ -191,6 +191,10 @@ void SRead()
                     dat = 1;
                     Read = 1;
                 }
+                else if (Data == 'G') {
+                    Serial.print(Data);
+                    Read = 2;
+                }
                 else
                     Read = 0;
             }
@@ -220,6 +224,24 @@ void SRead()
             }
             break;
 
+        case 2:
+            if (Sensor.available() > 0)
+            {
+                Serial.print(Sensor.read());
+                if (R < 8)
+                {
+                    Read = 0;
+                }
+                else {
+                    Read = 2;
+                }
+                R++;
+            }
+            else {
+                Read = 0;
+            }
+            break;
+
         case 3:
             lect[3] = DataS[3] - 0x30;
             if (lect[3] > 0) {
@@ -237,8 +259,9 @@ void SRead()
                 buzzeron = 1000;
                 ist = 1;
             }
-            else if (lect[0] <= 5 && ist == 1)
+            else if (lect[0] <= 5 && ist == 1) {
                 ist = 0;
+            }
             else {
                 Read = 0;
             }
@@ -389,6 +412,9 @@ void Console()
         else if (Data == 'c')
         {
             DisplayON = 1;
+            pul = 3;
+            puls = 0;
+
         }
         else if (Data == 'l')
         {
@@ -418,6 +444,10 @@ void Console()
                     Data = '?';
             }
             Serial.println();
+        }
+        else if (Data == 'X') {
+            Sensor.print("X 450\r\n");
+            Serial.println("Sent X configuration command to sensor");
         }
         else if (Data == '0' || Data == '1' || Data == '2' || Data == '3' || Data == '4' || Data == '5' || Data == '6' || Data == '7' || Data == '8' || Data == '9')
         {
