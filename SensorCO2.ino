@@ -255,11 +255,11 @@ void SRead()
                 lect[2] = DataS[6] - 0x30;
             }
             Display(lect[0], lect[1]);
-            if (lect[0] >= 6 && ist == 0) {
+            if (lect[0] >= 7 && ist == 0) {
                 buzzeron = 1000;
                 ist = 1;
             }
-            else if (lect[0] <= 5 && ist == 1) {
+            else if (lect[0] <= 6 && ist == 1) {
                 ist = 0;
             }
             else {
