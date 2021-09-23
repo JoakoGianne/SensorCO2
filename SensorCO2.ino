@@ -22,10 +22,11 @@ const int but = 3;
 
 const int MTP = 40; //Min pulse time
 
+int setup1,show, setA = 7, setB = 0, setta = 0, settb = 0;
 int DisplayON = 0, dt, dt2;
 int buzz = 0, buzzeron = 0;
 int Read = 0, d1 = 10, d2 = 10, lect[4], ist;
-int pul = 0, puls = 0;
+int pul = 0, puls = 0,p=0,h=0,k=0;
 char Data, DataS[50], dat = 0, R = 0;
 unsigned long tt, pultime = 0, pultime2, pulontime, pulon, buzzertime = 0;
 
@@ -34,7 +35,9 @@ void Display(int dts, int dts2);
 void Buzzer();
 void SRead();
 void Pulse();
+void Show();
 void Console();
+void SetUp();
 //--------------------------
 
 void setup()
@@ -104,6 +107,9 @@ void Display(int dts, int dts2)  //Print Display
                 digitalWrite(D, HIGH); digitalWrite(C, LOW); digitalWrite(B, LOW); digitalWrite(A, HIGH);
                 break;
             case 10:
+                digitalWrite(D, HIGH); digitalWrite(C, LOW); digitalWrite(B, HIGH); digitalWrite(A, LOW);
+                break;
+            default:
                 break;
         }
         switch (dts)
@@ -139,6 +145,9 @@ void Display(int dts, int dts2)  //Print Display
                 digitalWrite(d, HIGH); digitalWrite(c, LOW); digitalWrite(b, LOW); digitalWrite(a, HIGH);
                 break;
             case 10:
+                digitalWrite(d, HIGH); digitalWrite(c, LOW); digitalWrite(b, HIGH); digitalWrite(a, LOW);
+                break;
+            default:
                 break;
         }
     }
@@ -173,6 +182,10 @@ void Buzzer() {
                 buzzeron = 0;
                 buzz = 0;
             }
+            break;
+
+        default:
+            buzz = 0;
             break;
     }
 }
@@ -254,17 +267,25 @@ void SRead()
                 lect[1] = DataS[5] - 0x30;
                 lect[2] = DataS[6] - 0x30;
             }
-            Display(lect[0], lect[1]);
-            if (lect[0] >= 7 && ist == 0) {
-                buzzeron = 1000;
+            if(pul != 4)
+                Display(lect[0], lect[1]);
+
+            if (lect[0] >= setA && lect[1] >= setB && ist == 0) {
+                buzzeron = 2000;
                 ist = 1;
+                pul = 3;
+                puls = 0;
             }
-            else if (lect[0] <= 6 && ist == 1) {
+            else if (lect[0] <= (setA-1) && lect[1] <= setB && ist == 1) {
                 ist = 0;
             }
             else {
                 Read = 0;
             }
+            Read = 0;
+            break;
+
+        default:
             Read = 0;
             break;
     }
@@ -281,7 +302,7 @@ void Pulse()
             if (digitalRead(but) == 0)
             {
                 pul = 1;
-                int ff = 0;
+                p = 0;
                 pultime = tt;
             }
             else
@@ -290,6 +311,20 @@ void Pulse()
 
         //Mide tiempo de Pulso
         case 1:
+            if ((unsigned long)(tt - pultime) >= 2500 && p == 0) {
+            buzzeron = 50;
+            p = 1;
+            }
+            else if ((unsigned long)(tt - pultime) >= 7000 && p == 1)
+            {
+            buzzeron = 300;
+            p = 2;
+            }
+            else
+            {
+                pul = 1;
+            }
+
             if (digitalRead(but) == 1)
             {
                 pulon = (unsigned long)(tt - pultime);
@@ -300,11 +335,21 @@ void Pulse()
                     pulontime = tt;
                     Serial.println("Detected pulse = [1]");
                 }
-                else if (pulon >= 2500)
+                else if (pulon >= 2500 && pulon < 7000)
                 {
                     pul = 3;
                     puls = 0;
                     Serial.println("Detected pulse = [2]");
+                }
+                else if (pulon >= 7000)
+                {
+                    pul = 4;
+                    puls = 0;
+                    p = 0;
+                    h = 0;
+                    pulontime = tt;
+                    Display(0, 0);
+                    Serial.println("Detected pulse = [3]");
                 }
                 else
                 {
@@ -312,6 +357,9 @@ void Pulse()
                     puls = 0;
 
                 }
+            }
+            else {
+                pul = 1;
             }
             break;
 
@@ -389,6 +437,110 @@ void Pulse()
                     }
                     break;
             }
+            break;
+
+            //Config
+        case 4:
+            switch (puls)
+            {
+            case 0:     //display on
+                if ((unsigned long)(tt - pulontime) >= 700 && h == 0 && k == 0) {
+                    Display(settb, 10);
+                    pulontime = tt;
+                    k = 1;
+                }
+                if ((unsigned long)(tt - pulontime) >= 700 && h == 1) {
+                    Display(10, setta);
+                    pulontime = tt;
+                    k = 1;
+                }
+                else if ((unsigned long)(tt - pulontime) >= 500 && k == 1) {
+                    Display(settb, setta);
+                    pulontime = tt;
+                    k = 0;
+                }
+                DisplayON = 1;
+
+                //detecta pulso
+                if (digitalRead(but) == 0)
+                {
+                    puls = 1;
+                    pultime = tt;
+                    p = 0;
+                }
+                break;
+
+            case 1:     //apaga si hay pulso
+                DisplayON = 1;
+                Display(settb, setta);
+                if ((unsigned long)(tt - pultime) >= 2500 && p == 0) {
+                    buzzeron = 50;
+                    p = 1;
+                }
+                else if ((unsigned long)(tt - pultime) >= 7000 && p == 1)
+                {
+                    buzzeron = 500;
+                    p = 2;
+                }
+                else
+                {
+                    pul = 4;
+                    puls = 1;
+                }
+                if (digitalRead(but) == 1)
+                {
+                    pulon = (unsigned long)(tt - pultime);
+                    if (pulon >= MTP && pulon < 2500)
+                    {
+                        puls = 0;
+                        pul = 4;
+                  
+                        if (h == 0) {
+                            if (setta == 9) {
+                                setta = 0;
+                            }
+                            else
+                                setta++;
+                        }
+                        else {
+                            if (settb == 9) {
+                                settb = 0;
+                            }
+                            else
+                                settb++;
+                        }
+                    }
+
+                    else if (pulon >= 2500 && pulon < 7000)
+                    {
+                        pul = 4;
+                        puls = 0;
+                        if (h == 0)
+                            h = 1;
+                        else
+                            h = 0;
+                    }
+                    else if (pulon >= 7000)
+                    {
+                        setA = settb;
+                        setB = setta;
+                        buzzeron = 500;
+                        pul = 0;
+                        puls = 0;
+                        DisplayON = 0;
+                    }
+                    else
+                    {
+                        pul = 4;
+                        puls = 0;
+
+                    }
+                }
+                break;
+            }
+            break;
+        default:
+            pul = 0;
             break;
     }
 }
