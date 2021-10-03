@@ -35,9 +35,7 @@ void Display(int dts, int dts2);
 void Buzzer();
 void SRead();
 void Pulse();
-void Show();
 void Console();
-void SetUp();
 //--------------------------
 
 void setup()
